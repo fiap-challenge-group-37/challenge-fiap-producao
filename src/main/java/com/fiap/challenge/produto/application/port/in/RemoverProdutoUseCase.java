@@ -1,5 +1,6 @@
 package com.fiap.challenge.produto.application.port.in;
 
+// No longer returns boolean
 public interface RemoverProdutoUseCase {
-    boolean removerPorId(Long id); // Renomeado de executar para removerPorId
+    void removerPorId(Long id);
 }

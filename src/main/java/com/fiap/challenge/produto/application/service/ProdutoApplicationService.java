@@ -1,6 +1,7 @@
 package com.fiap.challenge.produto.application.service;
 
 import com.fiap.challenge.produto.application.exception.ApplicationServiceException;
+import com.fiap.challenge.produto.application.exception.ProdutoNaoEncontradoException; // New import
 import com.fiap.challenge.produto.application.port.in.*;
 import com.fiap.challenge.produto.domain.entities.Categoria;
 import com.fiap.challenge.produto.domain.entities.Produto;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+// Optional removed from imports if no longer used elsewhere in this file
 
 @Service
 public class ProdutoApplicationService implements
@@ -29,57 +30,53 @@ public class ProdutoApplicationService implements
 
     @Transactional
     @Override
-    public Produto executar(ProdutoDTO produtoDTO) { // Mantém 'executar' para CriarProdutoUseCase
+    public Produto executar(ProdutoDTO produtoDTO) {
         Produto produto = produtoDTO.toDomain();
         return produtoRepository.save(produto);
     }
 
     @Transactional
     @Override
-    public Optional<Produto> executar(Long id, ProdutoDTO produtoDTO) { // Mantém 'executar' para AtualizarProdutoUseCase
-        Optional<Produto> produtoExistenteOptional = produtoRepository.findById(id);
+    public Produto executar(Long id, ProdutoDTO produtoDTO) { // Changed return type
+        Produto produtoExistente = produtoRepository.findById(id)
+                .orElseThrow(() -> new ProdutoNaoEncontradoException("Produto com ID " + id + " não encontrado para atualização."));
 
-        if (produtoExistenteOptional.isPresent()) {
-            Produto produtoExistente = produtoExistenteOptional.get();
-            produtoExistente.setNome(produtoDTO.getNome());
-            try {
-                produtoExistente.setCategoria(Categoria.fromString(produtoDTO.getCategoria()));
-            } catch (IllegalArgumentException e) {
-                throw new ApplicationServiceException("Categoria inválida fornecida: " + produtoDTO.getCategoria(), e);
-            }
-            produtoExistente.setPreco(produtoDTO.getPreco());
-            produtoExistente.setDescricao(produtoDTO.getDescricao());
-            return Optional.of(produtoRepository.save(produtoExistente));
-        } else {
-            return Optional.empty();
+        produtoExistente.setNome(produtoDTO.getNome());
+        try {
+            produtoExistente.setCategoria(Categoria.fromString(produtoDTO.getCategoria()));
+        } catch (IllegalArgumentException e) {
+            throw new ApplicationServiceException("Categoria inválida fornecida: " + produtoDTO.getCategoria(), e);
         }
+        produtoExistente.setPreco(produtoDTO.getPreco());
+        produtoExistente.setDescricao(produtoDTO.getDescricao());
+        return produtoRepository.save(produtoExistente);
     }
 
     @Transactional
     @Override
-    public boolean removerPorId(Long id) { // Implementa o método renomeado de RemoverProdutoUseCase
-        if (produtoRepository.findById(id).isPresent()) {
-            produtoRepository.deleteById(id);
-            return true;
+    public void removerPorId(Long id) { // Changed return type and logic
+        if (!produtoRepository.findById(id).isPresent()) {
+            throw new ProdutoNaoEncontradoException("Produto com ID " + id + " não encontrado para remoção.");
         }
-        return false;
+        produtoRepository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<Produto> buscarPorId(Long id) { // Implementa o método renomeado de BuscarProdutoPorIdUseCase
-        return produtoRepository.findById(id);
+    public Produto buscarPorId(Long id) { // Changed return type
+        return produtoRepository.findById(id)
+                .orElseThrow(() -> new ProdutoNaoEncontradoException("Produto com ID " + id + " não encontrado."));
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<Produto> executar(Categoria categoria) { // Mantém 'executar' para BuscarProdutoPorCategoriaUseCase
+    public List<Produto> executar(Categoria categoria) {
         return produtoRepository.findByCategoria(categoria);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<Produto> executar() { // Mantém 'executar' para ListarTodosProdutosUseCase
+    public List<Produto> executar() {
         return produtoRepository.findAll();
     }
 }
