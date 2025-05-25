@@ -4,5 +4,5 @@ import com.fiap.challenge.produto.domain.entities.Produto;
 import java.util.Optional;
 
 public interface BuscarProdutoPorIdUseCase {
-    Optional<Produto> executar(Long id);
+    Optional<Produto> buscarPorId(Long id); // Renomeado de executar para buscarPorId
 }
