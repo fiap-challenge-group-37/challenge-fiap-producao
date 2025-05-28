@@ -21,10 +21,12 @@ public class MercadoPagoQrService {
 
     private static final Logger logger = LoggerFactory.getLogger(MercadoPagoQrService.class);
 
+    private static final String accessToken = System.getenv("MP_ACCESS_TOKEN");
+    private static final String userId = System.getenv("MP_USER_ID");
+    private static final String externalPosId = System.getenv("MP_EXTERNAL_POS_ID");
+
     public MercadoPagoQrCodeResponse gerarPedido(String externalReference, double totalAmount) {
-        String accessToken = "ACCESS_TOKEN";
-        String userId = "USER_ID";
-        String externalPosId = "EXTERNAL_POS_ID";
+
 
         String url = String.format(
                 "https://api.mercadopago.com/instore/orders/qr/seller/collectors/%s/pos/%s/qrs",
@@ -67,7 +69,6 @@ public class MercadoPagoQrService {
     }
 
     public void getPaymentByExternalReference() {
-        String accessToken = "APP_USR-5776470819795291-052622-9d0e16330f82db26018b57af9f373d82-2461182756";
         String externalReference = "51";
 
         String url = String.format(
