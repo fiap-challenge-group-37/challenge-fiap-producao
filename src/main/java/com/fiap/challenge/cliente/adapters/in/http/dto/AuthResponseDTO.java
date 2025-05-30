@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class AuthResponseDTO {
-    private String token;
+    private final String token;
 
     public AuthResponseDTO(String token) { this.token = token; }
 }

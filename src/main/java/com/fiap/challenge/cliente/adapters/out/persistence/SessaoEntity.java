@@ -2,8 +2,13 @@ package com.fiap.challenge.cliente.adapters.out.persistence;
 
 import com.fiap.challenge.cliente.domain.entities.Sessao;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Date;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "sessao")
 public class SessaoEntity {
@@ -15,38 +20,8 @@ public class SessaoEntity {
     private String token;
     private Date dataCriacao;
 
-    // Construtor vazio (obrigatório para JPA)
     public SessaoEntity() {}
 
-    // Getters
-    public Long getId() {
-        return id;
-    }
-    public String getCpf() {
-        return cpf;
-    }
-    public String getToken() {
-        return token;
-    }
-    public Date getDataCriacao() {
-        return dataCriacao;
-    }
-
-    // Setters
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
-    public void setToken(String token) {
-        this.token = token;
-    }
-    public void setDataCriacao(Date dataCriacao) {
-        this.dataCriacao = dataCriacao;
-    }
-
-    // Conversor para domínio
     public Sessao toDomain() {
         Sessao sessao = new Sessao();
         sessao.setId(this.id);
@@ -56,7 +31,6 @@ public class SessaoEntity {
         return sessao;
     }
 
-    // Conversor estático de domínio para entity
     public static SessaoEntity fromDomain(Sessao sessao) {
         SessaoEntity entity = new SessaoEntity();
         entity.setId(sessao.getId());
