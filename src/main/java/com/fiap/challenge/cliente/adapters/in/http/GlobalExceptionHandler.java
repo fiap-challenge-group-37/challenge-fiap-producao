@@ -3,6 +3,8 @@ package com.fiap.challenge.cliente.adapters.in.http;
 import com.fiap.challenge.cliente.application.exception.ClienteCpfJaCadastradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -33,5 +35,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    // Você pode adicionar outros @ExceptionHandler para outras exceções customizadas de sua aplicação
+    @ExceptionHandler({ AccessDeniedException.class, AuthorizationDeniedException.class })
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(Exception ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Acesso negado");
+        body.put("message", "Você não tem permissão para realizar esta operação.");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
 }
