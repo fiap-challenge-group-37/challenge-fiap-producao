@@ -120,8 +120,8 @@ public class PedidoController {
     public ResponseEntity<PedidoResponseDTO> atualizarStatusPedido(
             @PathVariable("pedido_id") Long pedidoId,
             @Valid @RequestBody StatusUpdateRequestDTO statusUpdateRequestDTO) {
-        logger.info("Recebida requisição para atualizar status do pedido {}: {}", pedidoId, statusUpdateRequestDTO.getNovoStatus()); // ALTERADO AQUI
-        Pedido pedidoAtualizado = atualizarStatusPedidoUseCase.executar(pedidoId, statusUpdateRequestDTO.getNovoStatus()); // ALTERADO AQUI
+        logger.info("Recebida requisição para atualizar status do pedido {}: {}", pedidoId, statusUpdateRequestDTO.getNovoStatus());
+        Pedido pedidoAtualizado = atualizarStatusPedidoUseCase.executar(pedidoId, statusUpdateRequestDTO.getNovoStatus());
         return ResponseEntity.ok(PedidoResponseDTO.fromDomain(pedidoAtualizado));
     }
 }
