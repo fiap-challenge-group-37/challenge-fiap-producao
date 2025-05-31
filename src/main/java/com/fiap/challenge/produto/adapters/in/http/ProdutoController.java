@@ -83,7 +83,7 @@ public class ProdutoController {
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    @SecurityRequirement(name = "ApiKeyAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{produto_id}")
     public ResponseEntity<ProdutoDTO> editarProduto(@PathVariable("produto_id") Long produtoId, @Valid @RequestBody ProdutoDTO dto) {
         Produto produtoAtualizado = atualizarProdutoUseCase.executar(produtoId, dto);
@@ -99,7 +99,7 @@ public class ProdutoController {
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    @SecurityRequirement(name = "ApiKeyAuth")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{produto_id}")
     public ResponseEntity<Void> removerProduto(@PathVariable("produto_id") Long produtoId) {
         removerProdutoUseCase.removerPorId(produtoId);
