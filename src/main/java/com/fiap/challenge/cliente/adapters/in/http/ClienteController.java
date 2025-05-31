@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -41,7 +42,8 @@ public class ClienteController {
         return new ClienteDTO(
                 cliente.getCpf().getValue(),
                 cliente.getNome(),
-                cliente.getEmail()
+                cliente.getEmail(),
+                cliente.getRole()
         );
     }
 
@@ -51,7 +53,7 @@ public class ClienteController {
         if (clienteRepository.existsByCpf(dto.getCpf())) {
             throw new ClienteCpfJaCadastradoException("Já existe um cliente cadastrado com este CPF.");
         }
-        Cliente cliente = new Cliente(dto.getCpf(), dto.getNome(), dto.getEmail());
+        Cliente cliente = new Cliente(dto.getCpf(), dto.getNome(), dto.getEmail(), "ROLE_CLIENTE");
         Cliente salvo = clienteRepository.save(cliente);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(salvo));
     }
@@ -65,7 +67,8 @@ public class ClienteController {
             if (clienteOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-            String token = jwtService.generateToken(cpf);
+            String userRole = clienteOptional.get().getRole();
+            String token = jwtService.generateToken(cpf, List.of(userRole));
 
             Sessao sessao = new Sessao();
             sessao.setCpf(cpf);
