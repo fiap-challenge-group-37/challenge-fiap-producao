@@ -3,6 +3,7 @@ package com.fiap.challenge.pedido.adapters.out.persistence;
 import com.fiap.challenge.pedido.domain.entities.Pedido;
 import com.fiap.challenge.pedido.domain.entities.StatusPedido;
 import com.fiap.challenge.pedido.domain.port.PedidoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +23,17 @@ public class PedidoRepositoryDatabase implements PedidoRepository {
     @Transactional
     public Pedido save(Pedido pedido) {
         PedidoEntity entity = PedidoEntity.fromDomain(pedido);
-        if (entity.getItens() != null) {
-            entity.getItens().forEach(itemEntity -> itemEntity.setPedido(entity));
-        }
         PedidoEntity savedEntity = jpaRepository.save(entity);
         return savedEntity.toDomain();
+    }
+
+    @Override
+    @Transactional
+    public void saveQRCode(Pedido pedido) {
+        PedidoEntity entity = jpaRepository.findById(pedido.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado com ID: " + pedido.getId()));
+        entity.setQrCode(pedido.getQrCode());
+        entity.toDomain();
     }
 
     @Override

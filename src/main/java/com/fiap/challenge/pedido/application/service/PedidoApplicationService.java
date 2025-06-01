@@ -55,6 +55,7 @@ public class PedidoApplicationService implements CriarPedidoUseCase, ListarPedid
 
         Pedido pedido = pedidoRepository.save(new Pedido(pedidoDTO.getClienteId(), itensDominio));
         pedido.setQrCode(mercadoPagoGateway.criarPagamento(pedido).getQrData());
+        pedidoRepository.saveQRCode(pedido);
         return pedido;
     }
 

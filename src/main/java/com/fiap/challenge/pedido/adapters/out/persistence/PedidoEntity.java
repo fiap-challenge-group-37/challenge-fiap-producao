@@ -13,9 +13,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -66,15 +64,20 @@ public class PedidoEntity {
         entity.setClienteId(pedido.getClienteId());
         entity.setValorTotal(pedido.getValorTotal());
         entity.setStatus(pedido.getStatus());
-        entity.setDataCriacao(pedido.getDataCriacao() == null ? LocalDateTime.now() : pedido.getDataCriacao());
-        entity.setDataAtualizacao(pedido.getDataAtualizacao() == null ? LocalDateTime.now() : pedido.getDataAtualizacao());
+        entity.setDataCriacao(
+                Optional.ofNullable(pedido.getDataCriacao()).orElse(LocalDateTime.now())
+        );
+        entity.setDataAtualizacao(
+                Optional.ofNullable(pedido.getDataAtualizacao()).orElse(LocalDateTime.now())
+        );
 
-        if (pedido.getItens() != null) {
-            List<ItemPedidoEntity> itemEntities = pedido.getItens().stream()
-                    .map(itemDomain -> ItemPedidoEntity.fromDomain(itemDomain, entity))
-                    .toList();
-            entity.setItens(itemEntities);
-        }
+        List<ItemPedidoEntity> itemEntities = Optional.ofNullable(pedido.getItens())
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .map(itemDomain -> ItemPedidoEntity.fromDomain(itemDomain, entity))
+                .toList();
+
+        entity.setItens(itemEntities);
         return entity;
     }
 

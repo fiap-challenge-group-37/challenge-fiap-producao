@@ -12,4 +12,5 @@ public interface PedidoRepository {
     List<Pedido> findAll(); // Este método agora usa a ordenação da cozinha
     List<Pedido> findByStatus(StatusPedido status);
     List<Pedido> findByStatusInOrderByDataCriacaoAsc(List<StatusPedido> statuses);
+    void saveQRCode(Pedido pedido);
 }
