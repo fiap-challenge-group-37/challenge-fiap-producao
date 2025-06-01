@@ -9,9 +9,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -23,6 +27,12 @@ public class PedidoEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column
+    private String externalID;
+
+    @Column
+    private String qrCode;
 
     @Column
     private Long clienteId;
@@ -47,7 +57,7 @@ public class PedidoEntity {
         List<ItemPedido> domainItens = this.itens.stream()
                 .map(ItemPedidoEntity::toDomain)
                 .toList();
-        return new Pedido(this.id, this.clienteId, domainItens, this.valorTotal, this.status, this.dataCriacao, this.dataAtualizacao);
+        return new Pedido(this.id, this.clienteId, domainItens, this.valorTotal, this.status, this.dataCriacao, this.dataAtualizacao, this.externalID, this.qrCode);
     }
 
     public static PedidoEntity fromDomain(Pedido pedido) {
@@ -66,5 +76,20 @@ public class PedidoEntity {
             entity.setItens(itemEntities);
         }
         return entity;
+    }
+
+    @PrePersist
+    public void gerarExternalID() {
+        if (externalID == null) {
+            this.externalID = gerarReferenciaUnica("PED");
+        }
+    }
+
+    public String gerarReferenciaUnica(String prefixo) {
+        String data = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String timestamp = String.valueOf(Instant.now().toEpochMilli());
+        String uuid = UUID.randomUUID().toString().substring(0, 8);
+
+        return String.format("%s-%s-%s-%s", prefixo, data, timestamp, uuid).toUpperCase();
     }
 }

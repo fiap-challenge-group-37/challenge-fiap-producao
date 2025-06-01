@@ -70,7 +70,7 @@ class PedidoApplicationServiceTest {
         pedidoDTOValido.setItens(Collections.singletonList(itemPedidoDTOValido));
 
         itemPedidoDominioValido = new ItemPedido(produtoValido.getId(), produtoValido.getNome(), itemPedidoDTOValido.getQuantidade(), produtoValido.getPreco());
-        pedidoValido = new Pedido(1L, 10L, Collections.singletonList(itemPedidoDominioValido), BigDecimal.valueOf(51.00), StatusPedido.RECEBIDO, LocalDateTime.now(), LocalDateTime.now());
+        pedidoValido = new Pedido(1L, 10L, Collections.singletonList(itemPedidoDominioValido), BigDecimal.valueOf(51.00), StatusPedido.RECEBIDO, LocalDateTime.now(), LocalDateTime.now(), "PED-UUID", "QRCODE");
 
         mockResponse = new MercadoPagoQrCodeResponse();
         mockResponse.setQrData("qr-code-mock");
@@ -88,7 +88,7 @@ class PedidoApplicationServiceTest {
             // Simula a atribuição de um ID ao salvar e recalcula o valor total se necessário
             return new Pedido(1L, pedidoParaSalvar.getClienteId(), pedidoParaSalvar.getItens(),
                     pedidoParaSalvar.getValorTotal(), pedidoParaSalvar.getStatus(),
-                    pedidoParaSalvar.getDataCriacao(), pedidoParaSalvar.getDataAtualizacao());
+                    pedidoParaSalvar.getDataCriacao(), pedidoParaSalvar.getDataAtualizacao(), pedidoParaSalvar.getExternalID(), pedidoParaSalvar.getQrCode());
         });
 
         when(mercadoPagoGateway.criarPagamento(any()))
@@ -177,7 +177,7 @@ class PedidoApplicationServiceTest {
         ItemPedido outroItemPedido = new ItemPedido(outroProduto.getId(), outroProduto.getNome(), 1, outroProduto.getPreco());
 
         List<Pedido> listaPedidosMock = Arrays.asList(pedidoValido,
-                new Pedido(2L, 11L, Collections.singletonList(outroItemPedido), BigDecimal.valueOf(7.00), StatusPedido.EM_PREPARACAO, LocalDateTime.now(), LocalDateTime.now()));
+                new Pedido(2L, 11L, Collections.singletonList(outroItemPedido), BigDecimal.valueOf(7.00), StatusPedido.EM_PREPARACAO, LocalDateTime.now(), LocalDateTime.now(), "PED-UUID", "QRCODE"));
 
         when(pedidoRepository.findAll()).thenReturn(listaPedidosMock);
 
@@ -250,7 +250,7 @@ class PedidoApplicationServiceTest {
         String novoStatusStr = StatusPedido.EM_PREPARACAO.name();
         Pedido pedidoAtualizadoMock = new Pedido(pedidoId, pedidoValido.getClienteId(), pedidoValido.getItens(),
                 pedidoValido.getValorTotal(), StatusPedido.EM_PREPARACAO,
-                pedidoValido.getDataCriacao(), LocalDateTime.now());
+                pedidoValido.getDataCriacao(), LocalDateTime.now(), pedidoValido.getExternalID(), pedidoValido.getQrCode());
 
         when(pedidoRepository.findById(pedidoId)).thenReturn(Optional.of(pedidoValido));
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedidoAtualizadoMock);

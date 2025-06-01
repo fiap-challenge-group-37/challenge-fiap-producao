@@ -39,10 +39,9 @@ public class MercadoPagoClient implements MercadoPagoGateway {
                 .pathSegment("instore", "orders", "qr", "seller", "collectors", properties.getUserId(), "pos", properties.getExternalPosId(), "qrs");
 
         String url = builder.build().toString();
-        ;
 
         Map<String, Object> body = new HashMap<>();
-        body.put("external_reference", pedido.getId().toString());
+        body.put("external_reference", pedido.getExternalID());
         body.put("notification_url", "https://www.seusite.com/notificacao");
         body.put("title", "Compra na loja");
         body.put("description", "Pedido " + pedido.getId());

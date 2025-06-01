@@ -1,4 +1,4 @@
-package com.fiap.challenge.pagamento.config;
+package com.fiap.challenge.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

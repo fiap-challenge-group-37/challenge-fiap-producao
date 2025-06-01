@@ -1,4 +1,4 @@
-package com.fiap.challenge.pagamento.domain.service;
+package com.fiap.challenge.pagamento.application.ports.service;
 
 import com.fiap.challenge.pagamento.adapters.out.mercadopago.dto.MercadoPagoPagamentoResponse;
 import com.fiap.challenge.pagamento.adapters.out.mercadopago.dto.PagamentoDTO;
@@ -28,7 +28,7 @@ public class SincronizarPagamentoService implements SincronizarPagamentoUseCase 
         List<Pedido> aguardandoPagamento = listarPedidosUseCase.executar(Optional.ofNullable(StatusPedido.AGUARDANDO_PAGAMENTO.toString()));
 
         aguardandoPagamento.forEach(pedido -> {
-            MercadoPagoPagamentoResponse pagamentoResponse = mercadoPagoGateway.getPaymentByExternalReference(pedido.getId().toString());
+            MercadoPagoPagamentoResponse pagamentoResponse = mercadoPagoGateway.getPaymentByExternalReference(pedido.getExternalID());
             if (!pagamentoResponse.getResults().isEmpty()) {
                 PagamentoDTO pagamentoDTO = pagamentoResponse.getResults().getFirst();
                 if (Objects.equals(pagamentoDTO.getStatus(), "approved")) {

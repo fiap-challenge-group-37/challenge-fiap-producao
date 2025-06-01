@@ -1,6 +1,8 @@
 package com.fiap.challenge.pedido.domain.entities;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -8,8 +10,11 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Pedido {
     private Long id;
+    private String externalID;
     private Long clienteId;
     private List<ItemPedido> itens;
     private BigDecimal valorTotal;
@@ -30,13 +35,15 @@ public class Pedido {
         calcularValorTotal();
     }
 
-    public Pedido(Long id, Long clienteId, List<ItemPedido> itens, BigDecimal valorTotal, StatusPedido status, LocalDateTime dataCriacao, LocalDateTime dataAtualizacao) {
+    public Pedido(Long id, Long clienteId, List<ItemPedido> itens, BigDecimal valorTotal, StatusPedido status, LocalDateTime dataCriacao, LocalDateTime dataAtualizacao, String externalID, String qrCode) {
         this(clienteId, itens);
         this.id = id;
         this.valorTotal = (valorTotal != null) ? valorTotal : this.valorTotal;
         this.status = status;
         this.dataCriacao = dataCriacao;
         this.dataAtualizacao = dataAtualizacao;
+        this.externalID = externalID;
+        this.qrCode = qrCode;
     }
 
     private void calcularValorTotal() {
