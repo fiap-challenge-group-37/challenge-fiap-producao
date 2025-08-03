@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: lanchonete-api-service
 spec:
+  type: NodePort
   selector:
-    app: lanchonete-api
+    app: challenge-fiap-api
   ports:
-    - protocol: TCP
-      port: 80
+    - port: 80
       targetPort: 8080
-  type: ClusterIP
+      nodePort: 30080
