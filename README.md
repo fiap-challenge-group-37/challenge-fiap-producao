@@ -30,16 +30,16 @@ Implementar um sistema de autoatendimento de fast food que permita:
 ### 🧾 Cliente
 - Cadastro e identificação via CPF
 - Montagem de pedido personalizado com:
-    - Lanche
-    - Acompanhamento
-    - Bebida
-    - Sobremesa
+  - Lanche
+  - Acompanhamento
+  - Bebida
+  - Sobremesa
 - Pagamento via QR Code do Mercado Pago (fake checkout)
 - Acompanhamento do status do pedido:
-    - Recebido
-    - Em preparação
-    - Pronto
-    - Finalizado
+  - Recebido
+  - Em preparação
+  - Pronto
+  - Finalizado
 
 ### 🛠️ Administrativo
 - Gestão de produtos (CRUD)
@@ -51,25 +51,49 @@ Implementar um sistema de autoatendimento de fast food que permita:
 
 ## Instalação do Projeto
 
-> **Pré-requisitos**: Ter o Docker instalado na máquina.
+> **Pré-requisitos**: Ter o Docker e o Docker Compose instalados na máquina.
 
 ### Passo 1 - Clonar o Repositório
 
 ```bash
-  git clone git@github.com:samuelvinib/challenge-fiap.git
-  cd challenge-fiap
+git clone git@github.com:samuelvinib/challenge-fiap.git
+cd challenge-fiap
 ```
 
-### Passo 2 -  Configurar e iniciar os containers
+---
+
+## Executando com Docker Compose
+
+### Ambiente de Desenvolvimento
+
+O ambiente de desenvolvimento permite hot-reload do código Java, facilitando testes e ajustes rápidos.
+
+1. **Suba os containers em modo desenvolvimento (default):**
 
 ```bash
 docker compose up -d --build
 ```
-
-A API estará disponível em:
+2. **Acesse a aplicação:**
 
 ```bash
-  http://localhost:8080
+http://localhost:8080
+```
+
+---
+
+### Ambiente de Produção
+
+No ambiente de produção, a imagem é otimizada usando multi-stage build, sem incluir código-fonte local e sem ferramentas de desenvolvimento.
+
+1. **Suba os containers para produção:**
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+2. **Acesse a aplicação:**
+
+```bash
+http://localhost:8080
 ```
 
 ---
@@ -86,7 +110,5 @@ A API estará disponível em:
 Após iniciar a aplicação, a documentação da API pode ser acessada pelo Swagger em:
 
 ```bash
-  http://localhost:8080/api/swagger-ui/index.html
+http://localhost:8080/api/swagger-ui/index.html
 ```
-
----
