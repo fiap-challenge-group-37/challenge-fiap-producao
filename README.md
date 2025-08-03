@@ -22,7 +22,7 @@ Implementar um sistema de autoatendimento de fast food que permita:
 - **Gerenciamento de Dependências:** Maven
 - **Banco de Dados:** MySQL
 - **Containers:** Docker e Docker Compose
-- **Orquestração Local:** Kubernetes (Minikube)
+- **Orquestração Local:** Kubernetes (Kind)
 
 ---
 
@@ -54,7 +54,7 @@ Implementar um sistema de autoatendimento de fast food que permita:
 
 > **Pré-requisitos**:
 > - Ter o Docker e o Docker Compose instalados na máquina.
-> - (Opcional) Para rodar no Kubernetes, ter o [Minikube](https://minikube.sigs.k8s.io/) instalado.
+> - (Opcional) Para rodar no Kubernetes, ter o [Kind](https://kind.sigs.k8s.io/) instalado (recomendado).
 
 ---
 
@@ -101,43 +101,56 @@ No ambiente de produção, a imagem é otimizada usando multi-stage build, sem i
 
 ---
 
-## Executando com Minikube (Kubernetes Local)
+## Executando com Kubernetes Local (Kind RECOMENDADO)
 
-> **Pré-requisitos**: Ter o Minikube instalado e em execução.
+> **Recomendado para padronizar ambientes de teste.**
 
-1. **Inicie o Minikube (caso ainda não esteja rodando):**
+### 1. Instale o Kind (se ainda não tiver):
 
-   ```bash
-   minikube start
-   ```
+```bash
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.23.0/kind-$(uname)-amd64
+chmod +x ./kind
+sudo mv ./kind /usr/local/bin/kind
+```
 
-2. **Aplique os manifests do Kubernetes:**
+### 2. Crie o cluster Kind:
 
-   ```bash
-   kubectl apply -f k8s/
-   ```
+```bash
+kind create cluster --name desafio-fiap
+```
 
-3. **Descubra o IP do Minikube:**
+### 3. Construa a imagem Docker e carregue para o Kind:
 
-   ```bash
-   minikube ip
-   ```
+Se o `Dockerfile` está em `docker/`:
 
-   > Exemplo de saída: `192.168.49.2`
+```bash
+docker build -t lanchonete_app:latest -f docker/Dockerfile .
+kind load docker-image lanchonete_app:latest --name desafio-fiap
+```
 
-4. **Acesse a aplicação pelo navegador:**
+### 4. Aplique os manifests do Kubernetes:
 
-   ```
-   http://<IP-DO-MINIKUBE>:30080/api/
-   ```
-   > Exemplo: [http://192.168.49.2:30080/api/](http://192.168.49.2:30080/api/)
+```bash
+kubectl apply -f k8s/
+```
 
-5. **Acesse a documentação da API (Swagger UI):**
+### 5. Exponha o serviço localmente (porta 8080 ou outra disponível):
 
-   ```
-   http://<IP-DO-MINIKUBE>:30080/api/
-   ```
-   > Exemplo: [http://192.168.49.2:30080/api/](http://192.168.49.2:30080/api/)
+```bash
+kubectl port-forward svc/lanchonete-api-service 8080:80
+```
+
+Acesse: [http://localhost:8080/api/](http://localhost:8080/api/)
+
+> **Se a porta 8080 estiver ocupada, use por exemplo:**
+> `kubectl port-forward svc/lanchonete-api-service 8081:80`  
+> E acesse [http://localhost:8081/api/](http://localhost:8081/api/)
+
+### 6. Para remover o cluster Kind ao finalizar:
+
+```bash
+kind delete cluster --name desafio-fiap
+```
 
 ---
 
@@ -150,7 +163,7 @@ No ambiente de produção, a imagem é otimizada usando multi-stage build, sem i
 
 ## Dicas
 
-- Caso não consiga acessar a aplicação no Minikube, verifique se o serviço está disponível rodando:
+- Caso não consiga acessar a aplicação no Kind, verifique se o serviço está disponível rodando:
   ```bash
   kubectl get svc
   ```
@@ -172,9 +185,9 @@ No ambiente de produção, a imagem é otimizada usando multi-stage build, sem i
 Após iniciar a aplicação, acesse a documentação no navegador:
 
 - **Docker Compose:**  
-  [http://localhost:8080/api/](http://localhost:8080/api/)
+  [http://localhost:8080/api/](http://localhost:8080/api/swagger-ui/index.html)
 
-- **Kubernetes/Minikube:**  
-  [http://<IP-DO-MINIKUBE>:30080/api/](http://192.168.49.2:30080/api/)
+- **Kubernetes/Kind:**  
+  [http://localhost:8080/api/](http://localhost:8080/api/swagger-ui/index.html)
 
 ---
