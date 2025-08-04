@@ -31,6 +31,7 @@ services:
       MP_ACCESS_TOKEN: "APP_USR-5776470819795291-052622-9d0e16330f82db26018b57af9f373d82-2461182756"
       MP_USER_ID: "2461182756"
       MP_EXTERNAL_POS_ID: "113730756"
+      MP_WEBHOOK: "http://54.161.49.91:8080/api/webhook/payment"
 
 volumes:
   mysql_data:
