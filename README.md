@@ -2,11 +2,11 @@
 
 ## Descrição
 
-Este projeto foi desenvolvido como parte do **Tech Challenge da Fase 01**, com o objetivo de aplicar os conhecimentos adquiridos nas disciplinas do curso em um sistema backend completo. A proposta consiste em criar uma solução de autoatendimento para uma lanchonete em expansão, otimizando o fluxo de pedidos, desde a escolha dos produtos até a entrega ao cliente, com um painel administrativo para gestão do negócio.
+Este projeto foi desenvolvido como parte do **Tech Challenge da Fase 01**, com o objetivo de aplicar os conhecimentos adquiridos nas disciplinas do curso em um sistema backend completo. A proposta consiste em criar uma solução de autoatendimento para uma lanchonete em expansão, otimizando o fluxo de pedidos — desde a escolha dos produtos até a entrega ao cliente —, incluindo um painel administrativo para gestão do negócio.
 
 ## Objetivo
 
-Implementar um sistema de autoatendimento de fast food que permita:
+Implementar um sistema de autoatendimento para fast food que permita:
 - Realização e acompanhamento de pedidos pelos clientes;
 - Gestão de produtos, categorias e clientes por administradores;
 - Monitoramento da preparação e entrega dos pedidos pela cozinha.
@@ -31,16 +31,16 @@ Implementar um sistema de autoatendimento de fast food que permita:
 ### 🧾 Cliente
 - Cadastro e identificação via CPF
 - Montagem de pedido personalizado com:
-  - Lanche
-  - Acompanhamento
-  - Bebida
-  - Sobremesa
+    - Lanche
+    - Acompanhamento
+    - Bebida
+    - Sobremesa
 - Pagamento via QR Code do Mercado Pago (fake checkout)
 - Acompanhamento do status do pedido:
-  - Recebido
-  - Em preparação
-  - Pronto
-  - Finalizado
+    - Recebido
+    - Em preparação
+    - Pronto
+    - Finalizado
 
 ### 🛠️ Administrativo
 - Gestão de produtos (CRUD)
@@ -105,48 +105,43 @@ No ambiente de produção, a imagem é otimizada usando multi-stage build, sem i
 
 > **Recomendado para padronizar ambientes de teste.**
 
-### 1. Instale o Kind (se ainda não tiver):
+### 1. Crie o cluster Kind com mapeamento de porta para NodePort:
+
+Crie o cluster:
 
 ```bash
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.23.0/kind-$(uname)-amd64
-chmod +x ./kind
-sudo mv ./kind /usr/local/bin/kind
+kind create cluster --name desafio-fiap --config kind-config.yaml
 ```
 
-### 2. Crie o cluster Kind:
-
-```bash
-kind create cluster --name desafio-fiap
-```
-
-### 3. Construa a imagem Docker e carregue para o Kind:
-
-Se o `Dockerfile` está em `docker/`:
+### 2. Construa a imagem Docker e carregue para o Kind:
 
 ```bash
 docker build -t lanchonete_app:latest -f docker/Dockerfile .
 kind load docker-image lanchonete_app:latest --name desafio-fiap
 ```
 
-### 4. Aplique os manifests do Kubernetes:
+### 3. Aplique os manifests do Kubernetes:
 
 ```bash
 kubectl apply -f k8s/
 ```
 
-### 5. Exponha o serviço localmente (porta 8080 ou outra disponível):
+### 4. Acesse a aplicação
+
+- [http://localhost:30080/api/](http://localhost:30080/api/)
+
+Se preferir usar port-forward:
 
 ```bash
 kubectl port-forward svc/lanchonete-api-service 8080:80
 ```
-
 Acesse: [http://localhost:8080/api/](http://localhost:8080/api/)
 
 > **Se a porta 8080 estiver ocupada, use por exemplo:**
 > `kubectl port-forward svc/lanchonete-api-service 8081:80`  
 > E acesse [http://localhost:8081/api/](http://localhost:8081/api/)
 
-### 6. Para remover o cluster Kind ao finalizar:
+### 5. Para remover o cluster Kind ao finalizar:
 
 ```bash
 kind delete cluster --name desafio-fiap
@@ -185,9 +180,9 @@ kind delete cluster --name desafio-fiap
 Após iniciar a aplicação, acesse a documentação no navegador:
 
 - **Docker Compose:**  
-  [http://localhost:8080/api/](http://localhost:8080/api/swagger-ui/index.html)
+  [http://localhost:8080/api/swagger-ui/index.html](http://localhost:8080/api/swagger-ui/index.html)
 
 - **Kubernetes/Kind:**  
-  [http://localhost:8080/api/](http://localhost:8080/api/swagger-ui/index.html)
+  [http://localhost:30080/api/swagger-ui/index.html](http://localhost:30080/api/swagger-ui/index.html)
 
 ---
