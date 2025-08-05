@@ -29,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return uri.startsWith("/api/cliente")
                 || uri.startsWith("/cliente")
                 || uri.startsWith("/api/actuator/health")
+                || uri.startsWith("/api/health")
                 || uri.startsWith("/api/webhook")
                 || uri.startsWith("/webhook")
                 || uri.startsWith("/api/swagger-ui.html")
