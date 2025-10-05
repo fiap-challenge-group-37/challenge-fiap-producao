@@ -1,6 +1,7 @@
 package com.fiap.challenge.config;
 
 import com.fiap.challenge.cliente.security.JwtAuthenticationFilter;
+import com.fiap.challenge.cliente.security.JwtConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +10,9 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
@@ -18,8 +21,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 @Configuration
 public class SecurityConfig {
 
-    @Autowired
-    public JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationConverter jwtAuthenticationConverter;
+
+    public SecurityConfig(JwtAuthenticationConverter jwtAuthenticationConverter) {
+        this.jwtAuthenticationConverter = jwtAuthenticationConverter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -37,14 +43,14 @@ public class SecurityConfig {
                                 "/api/webhook/", "api/webhook/**",
                                 "/webhook/", "/webhook/**",
                                 "/api/swagger-ui.html", "/swagger-ui.html",
-                                "/api/swagger-ui/**", "/swagger-ui/**",
+                                "/api/swagger-ui/**", "/swaggerD-ui/**",
                                 "/api/v3/api-docs/**", "/v3/api-docs/**",
                                 "/api/swagger-resources/**", "/swagger-resources/**",
                                 "/api/webjars/**", "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+                .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
                 .build();
     }
 
