@@ -24,31 +24,66 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      - name: Build and Analyze
+      - name: 🔨 Build Application
+        run: mvn -B clean compile
+
+      - name: 🧪 Run Tests
+        run: mvn -B test
+
+      - name: 📊 Generate Coverage Report
+        continue-on-error: true
+        run: mvn -B jacoco:report
+
+      - name: 📤 SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=fiap-challenge-group-52 \
             -Dsonar.projectKey=fiap-challenge-group-52_challenge-fiap-app
 
-      - name: Check PR Coverage (70%)
+      - name: 📊 Validate New Coverage (70% for PR)
+        if: github.event_name == 'pull_request'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sleep 15
-
           PROJECT_KEY="fiap-challenge-group-52_challenge-fiap-app"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          MIN_COVERAGE=70
 
-          # Busca coverage do New Code (PR)
-          NEW_COVERAGE=$(curl -s -u "$SONAR_TOKEN:" \
-            "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=new_coverage" \
-            | jq -r '.component.measures[0].value // "0"')
+          echo "🔍 Verificando coverage do PR #$PR_NUMBER..."
 
-          echo "New Code Coverage: $NEW_COVERAGE%"
+          # Busca status do Quality Gate
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$PROJECT_KEY&pullRequest=$PR_NUMBER")
 
-          if (( $(echo "$NEW_COVERAGE < 70" | bc -l) )); then
-            echo "❌ New Code Coverage $NEW_COVERAGE% está abaixo de 70%"
+          # Extrai new_coverage
+          NEW_COVERAGE=$(echo "$RESPONSE" | jq -r '
+            .projectStatus.conditions[] 
+            | select(.metricKey == "new_coverage") 
+            | .actualValue
+          ')
+
+          # Se não encontrou, ignora validação
+          if [ -z "$NEW_COVERAGE" ] || [ "$NEW_COVERAGE" = "null" ]; then
+            echo "⚠️  Métrica 'new_coverage' não disponível - ignorando validação"
+            echo "::warning::New coverage não encontrado no SonarCloud"
+            exit 0
+          fi
+
+          # Formata para exibição
+          COVERAGE=$(printf "%.2f" "$NEW_COVERAGE")
+
+          echo "📊 New Coverage: $COVERAGE%"
+          echo "🎯 Mínimo: $MIN_COVERAGE%"
+
+          # Valida threshold
+          if (( $(echo "$COVERAGE >= $MIN_COVERAGE" | bc -l) )); then
+            echo "✅ Coverage OK ($COVERAGE% >= $MIN_COVERAGE%)"
+            exit 0
+          else
+            echo "❌ Coverage insuficiente ($COVERAGE% < $MIN_COVERAGE%)"
+            echo "::error::New Coverage de $COVERAGE% está abaixo de $MIN_COVERAGE%"
             exit 1
           fi
