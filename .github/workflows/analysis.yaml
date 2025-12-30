@@ -1,4 +1,4 @@
-name: SonarQube Analysis
+name: Quality Analysis
 on:
   push:
     branches:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   sonarqube:
-    name: SonarQube
+    name: Quality Analysis
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,39 +24,36 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      - name: 🔨 Build Application
-        run: mvn -B clean compile
+      - name: Build and Test Application
+        run: mvn -B clean verify
 
-      - name: 🧪 Run Tests
-        run: mvn -B test
-
-      - name: 📊 Generate Coverage Report
+      - name: JaCoCo Coverage (min 80%)
         continue-on-error: true
-        run: mvn -B jacoco:report
+        run: mvn -B jacoco:check -Djacoco.failOnViolation=true
 
-      - name: 📤 SonarCloud Analysis
+      - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=fiap-challenge-group-52 \
-            -Dsonar.projectKey=fiap-challenge-group-52_challenge-fiap-app
+            -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
+            -Dsonar.organization=${{ vars.SONAR_ORG_KEY }} \
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
 
-      - name: 📊 Validate New Coverage (70% for PR)
+      - name: Validate New Coverage (70% for PR)
         if: github.event_name == 'pull_request'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          PROJECT_KEY="fiap-challenge-group-52_challenge-fiap-app"
           PR_NUMBER="${{ github.event.pull_request.number }}"
           MIN_COVERAGE=70
 
           echo "🔍 Verificando coverage do PR #$PR_NUMBER..."
+          sleep 10
 
           # Busca status do Quality Gate
           RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$PROJECT_KEY&pullRequest=$PR_NUMBER")
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ vars.SONAR_PROJECT_KEY }}&pullRequest=$PR_NUMBER")
 
           # Extrai new_coverage
           NEW_COVERAGE=$(echo "$RESPONSE" | jq -r '
