@@ -32,7 +32,7 @@
         <sonar.tests>src/test/java</sonar.tests>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.branch.name>master</sonar.branch.name>
+        <!-- <sonar.branch.name>master</sonar.branch.name> -->
     </properties>
     <dependencies>
         <dependency>
