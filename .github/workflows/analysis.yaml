@@ -32,3 +32,23 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.organization=fiap-challenge-group-52 \
             -Dsonar.projectKey=fiap-challenge-group-52_challenge-fiap-app
+
+      - name: Check PR Coverage (70%)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sleep 15
+
+          PROJECT_KEY="fiap-challenge-group-52_challenge-fiap-app"
+
+          # Busca coverage do New Code (PR)
+          NEW_COVERAGE=$(curl -s -u "$SONAR_TOKEN:" \
+            "https://sonarcloud.io/api/measures/component?component=$PROJECT_KEY&metricKeys=new_coverage" \
+            | jq -r '.component.measures[0].value // "0"')
+
+          echo "New Code Coverage: $NEW_COVERAGE%"
+
+          if (( $(echo "$NEW_COVERAGE < 70" | bc -l) )); then
+            echo "❌ New Code Coverage $NEW_COVERAGE% está abaixo de 70%"
+            exit 1
+          fi
