@@ -10,7 +10,7 @@ on:
 jobs:
   quality:
     name: Quality Analysis
-    uses: fiap-challenge-group-52/challenge-fiap-workflows/.github/workflows/quality-analysis.yaml@feature/reusable-workflows
+    uses: fiap-challenge-group-52/challenge-fiap-workflows/.github/workflows/quality-analysis.yaml@main
     with:
       java-version: "21"
     secrets:
