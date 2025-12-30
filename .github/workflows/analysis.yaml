@@ -28,8 +28,11 @@ jobs:
         run: mvn -B clean verify
 
       - name: JaCoCo Coverage (min 80%)
+        id: jacoco
         continue-on-error: true
-        run: mvn -B jacoco:check -Djacoco.failOnViolation=true
+        run: |
+          mvn -B jacoco:check -Djacoco.failOnViolation=true
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
 
       - name: SonarCloud Analysis
         env:
@@ -83,4 +86,14 @@ jobs:
             echo "❌ Coverage insuficiente ($COVERAGE% < $MIN_COVERAGE%)"
             echo "::error::New Coverage de $COVERAGE% está abaixo de $MIN_COVERAGE%"
             exit 1
+          fi
+
+      - name: Post JaCoCo Coverage
+        if: always()
+        run: |
+          if [ "${{ steps.jacoco.outputs.exit_code }}" != "0" ]; then
+            echo "::error title=Coverage abaixo do mínimo::O JaCoCo detectou cobertura insuficiente"
+            echo "❌ Coverage mínimo NÃO atingido"
+          else
+            echo "✅ Coverage mínimo atingido"
           fi
