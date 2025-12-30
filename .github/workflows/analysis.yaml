@@ -8,92 +8,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  sonarqube:
+  quality:
     name: Quality Analysis
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v3
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: "maven"
-
-      - name: Build and Test Application
-        run: mvn -B clean verify
-
-      - name: JaCoCo Coverage (min 80%)
-        id: jacoco
-        continue-on-error: true
-        run: |
-          mvn -B jacoco:check -Djacoco.failOnViolation=true
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
-
-      - name: SonarCloud Analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
-            -Dsonar.organization=${{ vars.SONAR_ORG_KEY }} \
-            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
-
-      - name: Validate New Coverage (70% for PR)
-        if: github.event_name == 'pull_request'
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          MIN_COVERAGE=70
-
-          echo "🔍 Verificando coverage do PR #$PR_NUMBER..."
-          sleep 10
-
-          # Busca status do Quality Gate
-          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ vars.SONAR_PROJECT_KEY }}&pullRequest=$PR_NUMBER")
-
-          # Extrai new_coverage
-          NEW_COVERAGE=$(echo "$RESPONSE" | jq -r '
-            .projectStatus.conditions[] 
-            | select(.metricKey == "new_coverage") 
-            | .actualValue
-          ')
-
-          # Se não encontrou, ignora validação
-          if [ -z "$NEW_COVERAGE" ] || [ "$NEW_COVERAGE" = "null" ]; then
-            echo "⚠️  Métrica 'new_coverage' não disponível - ignorando validação"
-            echo "::warning::New coverage não encontrado no SonarCloud"
-            exit 0
-          fi
-
-          # Formata para exibição
-          COVERAGE=$(printf "%.2f" "$NEW_COVERAGE")
-
-          echo "📊 New Coverage: $COVERAGE%"
-          echo "🎯 Mínimo: $MIN_COVERAGE%"
-
-          # Valida threshold
-          if (( $(echo "$COVERAGE >= $MIN_COVERAGE" | bc -l) )); then
-            echo "✅ Coverage OK ($COVERAGE% >= $MIN_COVERAGE%)"
-            exit 0
-          else
-            echo "❌ Coverage insuficiente ($COVERAGE% < $MIN_COVERAGE%)"
-            echo "::error::New Coverage de $COVERAGE% está abaixo de $MIN_COVERAGE%"
-            exit 1
-          fi
-
-      - name: Post JaCoCo Coverage
-        if: always()
-        run: |
-          if [ "${{ steps.jacoco.outputs.exit_code }}" != "0" ]; then
-            echo "::error title=Coverage abaixo do mínimo::O JaCoCo detectou cobertura insuficiente"
-            echo "❌ Coverage mínimo NÃO atingido"
-          else
-            echo "✅ Coverage mínimo atingido"
-          fi
+    uses: fiap-challenge-group-52/challenge-fiap-workflows/.github/workflows/quality-analysis.yaml@main
+    with:
+      java-version: "21"
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
