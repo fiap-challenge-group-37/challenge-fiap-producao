@@ -26,7 +26,7 @@ public class PedidoService {
                 .collect(Collectors.toList());
     }
 
-    private int getPrioridade(PedidoProducao p) {
+    int getPrioridade(PedidoProducao p) {
         return switch (p.getStatus()) {
             case PRONTO -> 1;
             case EM_PREPARACAO -> 2;

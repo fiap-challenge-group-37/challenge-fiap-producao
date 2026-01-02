@@ -40,11 +40,7 @@ class ProducaoControllerTest {
 
     @Test
     void deveListarFila() throws Exception {
-        PedidoProducao pedido = PedidoProducao.builder()
-                .id("1")
-                .status(StatusPedido.RECEBIDO)
-                .build();
-
+        PedidoProducao pedido = PedidoProducao.builder().id("1").status(StatusPedido.RECEBIDO).build();
         when(service.listarFilaCozinha()).thenReturn(List.of(pedido));
 
         mockMvc.perform(get("/producao/fila"))
@@ -53,20 +49,28 @@ class ProducaoControllerTest {
     }
 
     @Test
-    void deveAtualizarStatus() throws Exception {
-        PedidoProducao pedido = PedidoProducao.builder()
-                .id("1")
-                .status(StatusPedido.RECEBIDO)
-                .build();
-
+    void deveAtualizarStatusComSucesso() throws Exception {
+        PedidoProducao pedido = PedidoProducao.builder().id("1").status(StatusPedido.RECEBIDO).build();
         when(repository.findById("1")).thenReturn(Optional.of(pedido));
-        when(repository.save(any())).thenReturn(pedido);
+        when(repository.save(any())).thenAnswer(i -> i.getArguments()[0]);
 
         StatusDTO dto = new StatusDTO(StatusPedido.EM_PREPARACAO);
 
         mockMvc.perform(patch("/producao/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("EM_PREPARACAO"));
+    }
+
+    @Test
+    void deveRetornar404QuandoPedidoNaoEncontrado() throws Exception {
+        when(repository.findById("999")).thenReturn(Optional.empty());
+        StatusDTO dto = new StatusDTO(StatusPedido.PRONTO);
+
+        mockMvc.perform(patch("/producao/999/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotFound());
     }
 }
