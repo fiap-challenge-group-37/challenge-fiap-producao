@@ -1,7 +1,7 @@
 package com.fiap.producao.controller;
 
+import com.fiap.producao.domain.dto.StatusDTO;
 import com.fiap.producao.domain.entity.PedidoProducao;
-import com.fiap.producao.domain.entity.StatusPedido;
 import com.fiap.producao.service.PedidoService;
 import com.fiap.producao.repository.PedidoProducaoRepository;
 import org.springframework.http.ResponseEntity;
@@ -38,5 +38,3 @@ public class ProducaoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 }
-
-record StatusDTO(StatusPedido status) {}
