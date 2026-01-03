@@ -1,203 +1,73 @@
-# Tech Challenge – Sistema de Autoatendimento para Lanchonete
+# 🧑‍🍳 Microsserviço de Produção (Cozinha)
+Este microsserviço é responsável pela gestão da fila de preparação de pedidos da lanchonete. Ele organiza os pedidos por prioridade de status e garante que apenas pedidos ativos (não finalizados) apareçam para a cozinha.
 
-## Descrição
+#  🚀 Tecnologias e Infraestrutura
+Java 21 & Spring Boot 3.3.1
 
-Este projeto foi desenvolvido como parte do **Tech Challenge da Fase 01**, com o objetivo de aplicar os conhecimentos adquiridos nas disciplinas do curso em um sistema backend completo. A proposta consiste em criar uma solução de autoatendimento para uma lanchonete em expansão, otimizando o fluxo de pedidos — desde a escolha dos produtos até a entrega ao cliente —, incluindo um painel administrativo para gestão do negócio.
+MongoDB: Persistência de pedidos em produção.
 
-## Objetivo
+AWS SQS: Integração assíncrona para recebimento de pedidos pagos.
 
-Implementar um sistema de autoatendimento para fast food que permita:
-- Realização e acompanhamento de pedidos pelos clientes;
-- Gestão de produtos, categorias e clientes por administradores;
-- Monitoramento da preparação e entrega dos pedidos pela cozinha.
+Docker: Containerização do serviço e do banco de dados.
 
----
+# ⚙️ Configuração Local (Docker)
+Para subir o ambiente completo (API + MongoDB), execute:
 
-## Tecnologias Utilizadas
+Bash
 
-- **Linguagem:** Java
-- **Framework:** Spring Boot
-- **Arquitetura:** Hexagonal
-- **Documentação de API:** Swagger
-- **Gerenciamento de Dependências:** Maven
-- **Banco de Dados:** MySQL
-- **Containers:** Docker e Docker Compose
-- **Orquestração Local:** Kubernetes (Kind)
+docker-compose up -d --build
+A API estará disponível em: http://localhost:8082
 
----
+# 🔌 API Endpoints (Swagger)
+A documentação interativa da API (Swagger UI) pode ser acedida em: 👉 http://localhost:8082/swagger-ui/index.html
 
-## Funcionalidades
+Principais Operações:
+Listar Fila: GET /producao/fila - Retorna pedidos ordenados por status (Pronto > Em Preparação > Recebido). Pedidos Finalizados são omitidos automaticamente.
 
-### 🧾 Cliente
-- Cadastro e identificação via CPF
-- Montagem de pedido personalizado com:
-    - Lanche
-    - Acompanhamento
-    - Bebida
-    - Sobremesa
-- Pagamento via QR Code do Mercado Pago (fake checkout)
-- Acompanhamento do status do pedido:
-    - Recebido
-    - Em preparação
-    - Pronto
-    - Finalizado
+Atualizar Status: PATCH /producao/{id}/status - Atualiza a etapa do pedido.
 
-### 🛠️ Administrativo
-- Gestão de produtos (CRUD)
-- Gestão de categorias fixas
-- Gestão de clientes
-- Acompanhamento de pedidos em tempo real
+# 🧪 Teste Manual de Fluxo (PowerShell)
+Para validar a regra de negócio onde um pedido sai da fila ao ser finalizado, siga estes passos no terminal:
 
+1. Inserir Pedido Simulado
+   Crie um pedido diretamente no MongoDB (simulando um evento vindo do SQS):
 
----
-## Entregáveis
+PowerShell
 
----
-### Desenho do projeto
+docker exec producao-mongo mongosh fiap-producao-db --eval 'db.pedidos_cozinha.insertOne({ \"_id\": \"pedido-teste-01\", \"idPedidoOriginal\": 123, \"status\": \"RECEBIDO\", \"itens\": [{ \"nome\": \"Hambúrguer\", \"quantidade\": 1 }], \"dataEntrada\": new Date() })'
+2. Consultar Fila Ativa
+   Verifique se o pedido aparece na lista:
 
-- [Desenho do projeto](desenho-arquitetura.jpeg)
+PowerShell
 
+Invoke-RestMethod -Method Get -Uri "http://localhost:8082/producao/fila"
+3. Finalizar o Pedido
+   Altere o status para FINALIZADO:
 
-### Video
+PowerShell
 
-- [Video apresentação](https://youtu.be/43vfyDISez0)
+Invoke-RestMethod -Method Patch -Uri "http://localhost:8082/producao/pedido-teste-01/status" -ContentType "application/json" -Body '{"status": "FINALIZADO"}'
+4. Validar Saída da Fila
+   Consulte a fila novamente. O resultado deve ser vazio []:
 
+PowerShell
 
----
+Invoke-RestMethod -Method Get -Uri "http://localhost:8082/producao/fila"
+# ☁️ Deploy e Produção (Kubernetes)
+O serviço está preparado para ambientes de cloud (AWS) via Kubernetes. As configurações de SQS são dinâmicas:
 
-## Instalação do Projeto
+Local: O SQS inicia desligado (SQS_ENABLED: false) para evitar erros de credenciais AWS.
 
-> **Pré-requisitos**:
-> - Ter o Docker e o Docker Compose instalados na máquina.
-> - (Opcional) Para rodar no Kubernetes, ter o [Kind](https://kind.sigs.k8s.io/) instalado (recomendado).
+Nuvem: Através do k8s/configmap.yaml, as variáveis SQS_ENABLED e QUEUE_PEDIDO_PAGO ativam o consumo real das filas SQS.
 
----
+# 🛠️ Comandos Úteis de Diagnóstico
+PowerShell
 
-### 1. Clonar o Repositório
+Ver logs da aplicação:
+docker logs producao-app
 
-```bash
-git clone git@github.com:samuelvinib/challenge-fiap.git
-cd challenge-fiap
-```
+Reiniciar apenas a API:
+docker restart producao-app
 
----
-
-## Executando com Docker Compose
-
-### Ambiente de Desenvolvimento
-
-Permite hot-reload do código Java, facilitando testes e ajustes rápidos.
-
-1. **Suba os containers em modo desenvolvimento (default):**
-
-   ```bash
-   docker compose up -d --build
-   ```
-
-2. **Acesse a aplicação:**
-
-   [http://localhost:8080](http://localhost:8080)
-
----
-
-### Ambiente de Produção
-
-No ambiente de produção, a imagem é otimizada usando multi-stage build, sem incluir código-fonte local e sem ferramentas de desenvolvimento.
-
-1. **Suba os containers para produção:**
-
-   ```bash
-   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-   ```
-
-2. **Acesse a aplicação:**
-
-   [http://localhost:8080](http://localhost:8080)
-
----
-
-## Executando com Kubernetes Local (Kind RECOMENDADO)
-
-> **Recomendado para padronizar ambientes de teste.**
-
-### 1. Crie o cluster Kind com mapeamento de porta para NodePort:
-
-Crie o cluster:
-
-```bash
-kind create cluster --name desafio-fiap --config kind-config.yaml
-```
-
-### 2. Construa a imagem Docker e carregue para o Kind:
-
-```bash
-docker build -t lanchonete_app:latest -f docker/Dockerfile .
-kind load docker-image lanchonete_app:latest --name desafio-fiap
-```
-
-### 3. Aplique os manifests do Kubernetes:
-
-```bash
-kubectl apply -f k8s/
-```
-
-### 4. Acesse a aplicação
-
-- [http://localhost:30080/api/](http://localhost:30080/api/)
-
-Se preferir usar port-forward:
-
-```bash
-kubectl port-forward svc/lanchonete-api-service 8080:80
-```
-Acesse: [http://localhost:8080/api/](http://localhost:8080/api/)
-
-> **Se a porta 8080 estiver ocupada, use por exemplo:**
-> `kubectl port-forward svc/lanchonete-api-service 8081:80`  
-> E acesse [http://localhost:8081/api/](http://localhost:8081/api/)
-
-### 5. Para remover o cluster Kind ao finalizar:
-
-```bash
-kind delete cluster --name desafio-fiap
-```
-
----
-
-## Recursos Adicionais
-
-- **Segurança:** A API está protegida por API Key via Spring Security.
-- **Documentação:** A API está documentada via Swagger.
-
----
-
-## Dicas
-
-- Caso não consiga acessar a aplicação no Kind, verifique se o serviço está disponível rodando:
-  ```bash
-  kubectl get svc
-  ```
-  E confirme que o serviço `lanchonete-api-service` está com um `NodePort` (ex: 30080).
-- Se tiver problemas de conexão, confira o selector do service e os endpoints com:
-  ```bash
-  kubectl get endpoints lanchonete-api-service
-  ```
-- Para acessar localmente via port-forward:
-  ```bash
-  kubectl port-forward svc/lanchonete-api-service 8080:80
-  ```
-  E acesse: [http://localhost:8080/api/](http://localhost:8080/api/)
-
----
-
-## Documentação da API
-
-Após iniciar a aplicação, acesse a documentação no navegador:
-
-- **Docker Compose:**  
-  [http://localhost:8080/api/swagger-ui/index.html](http://localhost:8080/api/swagger-ui/index.html)
-
-- **Kubernetes/Kind:**  
-  [http://localhost:30080/api/swagger-ui/index.html](http://localhost:30080/api/swagger-ui/index.html)
-
----
+Reconstruir imagem ignorando cache:
+docker-compose build --no-cache app

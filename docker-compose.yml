@@ -10,6 +10,7 @@ services:
   app:
     build:
       context: .
+      dockerfile: docker/Dockerfile
     container_name: producao-app
     ports:
       - "8082:8082"
