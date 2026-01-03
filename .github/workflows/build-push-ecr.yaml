@@ -5,6 +5,7 @@ on:
     workflows: ["Quality Analysis"]
     branches:
       - master
+      - main
     types:
       - completed
 
