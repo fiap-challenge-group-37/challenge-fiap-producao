@@ -1,21 +1,14 @@
-# Builder stage
-FROM maven:3.9.6-eclipse-temurin-21 AS builder
+﻿# Etapa 1: Build
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-RUN mvn clean package -DskipTests
+# Alteração aqui: maven.test.skip=true ignora compilação de testes
+RUN mvn clean package -Dmaven.test.skip=true
 
-# Dev stage
-FROM maven:3.9.6-eclipse-temurin-21 AS dev
+# Etapa 2: Runtime
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn dependency:go-offline
-CMD ["mvn", "spring-boot:run"]
-
-# Runtime (prod) stage
-FROM eclipse-temurin:21-jre AS prod
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
-EXPOSE 8080
-CMD ["java", "-jar", "app.jar"]
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "app.jar"]
