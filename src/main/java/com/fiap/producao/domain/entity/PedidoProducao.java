@@ -4,8 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,14 +14,18 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "pedidos_cozinha")
+@DynamoDbBean
 public class PedidoProducao {
 
-    @Id
     private String id;
     private Long idPedidoOriginal;
     private List<ItemProducao> itens;
-    private StatusPedido status; 
+    private StatusPedido status;
     private LocalDateTime dataEntrada;
     private LocalDateTime dataAtualizacao;
+
+    @DynamoDbPartitionKey
+    public String getId() {
+        return id;
+    }
 }

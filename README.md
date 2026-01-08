@@ -4,14 +4,14 @@ Este microsserviço é responsável pela gestão da fila de preparação de pedi
 #  🚀 Tecnologias e Infraestrutura
 Java 21 & Spring Boot 3.3.1
 
-MongoDB: Persistência de pedidos em produção.
+dynamodbDB: Persistência de pedidos em produção.
 
 AWS SQS: Integração assíncrona para recebimento de pedidos pagos.
 
 Docker: Containerização do serviço e do banco de dados.
 
 # ⚙️ Configuração Local (Docker)
-Para subir o ambiente completo (API + MongoDB), execute:
+Para subir o ambiente completo (API + dynamodbDB), execute:
 
 Bash
 
@@ -30,11 +30,11 @@ Atualizar Status: PATCH /producao/{id}/status - Atualiza a etapa do pedido.
 Para validar a regra de negócio onde um pedido sai da fila ao ser finalizado, siga estes passos no terminal:
 
 1. Inserir Pedido Simulado
-   Crie um pedido diretamente no MongoDB (simulando um evento vindo do SQS):
+   Crie um pedido diretamente no dynamodbDB (simulando um evento vindo do SQS):
 
 PowerShell
 
-docker exec producao-mongo mongosh fiap-producao-db --eval 'db.pedidos_cozinha.insertOne({ \"_id\": \"pedido-teste-01\", \"idPedidoOriginal\": 123, \"status\": \"RECEBIDO\", \"itens\": [{ \"nome\": \"Hambúrguer\", \"quantidade\": 1 }], \"dataEntrada\": new Date() })'
+docker exec producao-dynamodb dynamodbsh fiap-producao-db --eval 'db.pedidos_cozinha.insertOne({ \"_id\": \"pedido-teste-01\", \"idPedidoOriginal\": 123, \"status\": \"RECEBIDO\", \"itens\": [{ \"nome\": \"Hambúrguer\", \"quantidade\": 1 }], \"dataEntrada\": new Date() })'
 2. Consultar Fila Ativa
    Verifique se o pedido aparece na lista:
 

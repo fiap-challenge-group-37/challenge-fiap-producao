@@ -1,11 +1,10 @@
 services:
-  mongodb:
-    image: mongo:latest
-    container_name: producao-mongo
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: producao-dynamodb
     ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb"
 
   app:
     build:
@@ -15,10 +14,11 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - mongodb
+      - dynamodb-local
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/fiap-producao-db
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://dynamodb-local:8000
       - SERVER_PORT=8082
-
-volumes:
-  mongo_data:
+      - SQS_ENABLED=false
