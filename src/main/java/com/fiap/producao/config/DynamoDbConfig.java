@@ -14,7 +14,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 public class DynamoDbConfig {
 
     @Bean
-    @ConditionalOnBean(DynamoDbEnhancedClient.class) // IMPORTANTE: Só roda se o DynamoDB estiver configurado
+    @ConditionalOnBean(DynamoDbEnhancedClient.class) // Só roda se o DynamoDB estiver ativo
     public CommandLineRunner criarTabelaSeNaoExistir(DynamoDbEnhancedClient client,
                                                      @Value("${aws.dynamodb.table-name}") String tableName) {
         return args -> {
@@ -23,8 +23,7 @@ public class DynamoDbConfig {
                 table.createTable();
                 System.out.println("Tabela " + tableName + " criada/verificada com sucesso.");
             } catch (Exception e) {
-                // Ignora erros se a tabela já existir
-                System.out.println("Inicialização da tabela: " + e.getMessage());
+                System.out.println("Status da tabela: " + e.getMessage());
             }
         };
     }
