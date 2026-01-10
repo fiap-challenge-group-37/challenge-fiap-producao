@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 @Configuration
 public class SqsConfig {
 
-    // 1. Cria o Cliente SQS com as credenciais do ambiente (K8s)
     @Bean
     public SqsAsyncClient sqsAsyncClient() {
         return SqsAsyncClient.builder()
@@ -20,15 +19,15 @@ public class SqsConfig {
                 .build();
     }
 
-    // 2. Define o Conversor customizado como Bean.
-    // O Spring Cloud AWS vai detectar este Bean automaticamente e usar no Listener.
     @Bean
     public SqsMessagingMessageConverter sqsMessagingMessageConverter(ObjectMapper objectMapper) {
         SqsMessagingMessageConverter converter = new SqsMessagingMessageConverter();
         converter.setObjectMapper(objectMapper);
 
-        // O PULO DO GATO: Ignora o cabeçalho 'JavaType' que vem do Pedido
-        converter.setPayloadTypeHeader(null);
+        // CORREÇÃO: Define um mapeador que sempre retorna null.
+        // Isso diz ao Spring: "Não tente descobrir a classe olhando a mensagem.
+        // Use a classe que está definida no método @SqsListener".
+        converter.setPayloadTypeMapper(message -> null);
 
         return converter;
     }
