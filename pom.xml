@@ -154,7 +154,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+                <version>0.8.12</version>
 
                 <configuration>
                     <rules>
@@ -170,10 +170,9 @@
                         </rule>
                     </rules>
                     <excludes>
-                        <exclude>**/config/**</exclude>
-                        <exclude>**/domain/dto/**</exclude>
-                        <exclude>**/domain/entity/**</exclude>
-                        <exclude>**/ProducaoApplication.class</exclude>
+                        <exclude>com/fiap/pedido/PedidoApplication.class</exclude>
+                        <exclude>**/dto/**</exclude>
+                        <exclude>**/entities/**</exclude>
                     </excludes>
                 </configuration>
 
@@ -186,13 +185,14 @@
                     </execution>
                     <execution>
                         <id>report</id>
-                        <phase>test</phase>
+                        <phase>verify</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                     </execution>
                     <execution>
                         <id>check</id>
+                        <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
