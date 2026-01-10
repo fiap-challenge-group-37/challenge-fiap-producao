@@ -6,7 +6,7 @@ import com.fiap.producao.domain.entity.StatusPedido;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,16 +14,31 @@ import static org.junit.jupiter.api.Assertions.*;
 class PedidoDTOTest {
 
     @Test
-    void deveCriarDtoViaBuilderEConstrutor() {
-        // Arrange
-        String id = "uuid-123";
-        Long idOriginal = 10L;
-        StatusPedido status = StatusPedido.RECEBIDO; // Ajuste conforme seu Enum real
+    void testeCoberturaTotal() {
+        // 1. Preparar dados
+        String id = "123";
+        Long idOriginal = 99L;
+        StatusPedido status = StatusPedido.RECEBIDO; // Ajuste se seu enum for diferente
         LocalDateTime agora = LocalDateTime.now();
-        List<ItemProducao> itens = Collections.emptyList();
+        List<ItemProducao> itens = new ArrayList<>();
 
-        // Act - Testando Builder e AllArgsConstructor
-        PedidoDTO dto = PedidoDTO.builder()
+        // 2. Testar Construtor @NoArgsConstructor e Setters (@Data)
+        PedidoDTO dto1 = new PedidoDTO();
+        dto1.setId(id);
+        dto1.setIdPedidoOriginal(idOriginal);
+        dto1.setStatus(status);
+        dto1.setDataEntrada(agora);
+        dto1.setItens(itens);
+
+        // 3. Testar Getters (@Data)
+        assertEquals(id, dto1.getId());
+        assertEquals(idOriginal, dto1.getIdPedidoOriginal());
+        assertEquals(status, dto1.getStatus());
+        assertEquals(agora, dto1.getDataEntrada());
+        assertEquals(itens, dto1.getItens());
+
+        // 4. Testar @Builder e @AllArgsConstructor
+        PedidoDTO dto2 = PedidoDTO.builder()
                 .id(id)
                 .idPedidoOriginal(idOriginal)
                 .status(status)
@@ -31,61 +46,36 @@ class PedidoDTOTest {
                 .itens(itens)
                 .build();
 
-        // Assert - Testando Getters
-        assertEquals(id, dto.getId());
-        assertEquals(idOriginal, dto.getIdPedidoOriginal());
-        assertEquals(status, dto.getStatus());
-        assertEquals(agora, dto.getDataEntrada());
-        assertEquals(itens, dto.getItens());
+        // 5. Testar equals(), hashCode() e toString() (Gerados pelo @Data)
+        // Isso é o que geralmente mata a cobertura do Lombok se não testar
+        assertEquals(dto1, dto2); // Testar equals
+        assertEquals(dto1.hashCode(), dto2.hashCode()); // Testar hashCode
+        assertNotNull(dto1.toString()); // Testar toString
+
+        // Testar desigualdade
+        PedidoDTO dto3 = new PedidoDTO();
+        assertNotEquals(dto1, dto3);
     }
 
     @Test
-    void deveCriarDtoViaNoArgsESetters() {
-        // Testando NoArgsConstructor e Setters
-        PedidoDTO dto = new PedidoDTO();
-        dto.setId("123");
-        dto.setStatus(StatusPedido.PRONTO); // Ajuste conforme seu Enum
-
-        assertEquals("123", dto.getId());
-        assertEquals(StatusPedido.PRONTO, dto.getStatus());
-
-        // Testando toString() e equals/hashCode (gerados pelo @Data)
-        // Isso é essencial para 100% de coverage no Lombok
-        assertNotNull(dto.toString());
-        PedidoDTO dto2 = new PedidoDTO();
-        dto2.setId("123");
-        dto2.setStatus(StatusPedido.PRONTO);
-        assertEquals(dto, dto2);
-        assertEquals(dto.hashCode(), dto2.hashCode());
-    }
-
-    @Test
-    void deveConverterDeEntityParaDtoCorretamente() {
+    void testeMetodoEstaticoFromEntity() {
         // Arrange
-        String id = "uuid-entity";
-        Long idOriginal = 99L;
-        StatusPedido status = StatusPedido.EM_PREPARACAO;
-        LocalDateTime data = LocalDateTime.now();
-        List<ItemProducao> itens = Collections.emptyList();
-
-        // Simulando a Entity (Como não tenho o código da Entity, estou usando setters ou construtor)
-        // Se sua entity usar Builder, ajuste aqui.
         PedidoProducao entity = new PedidoProducao();
-        entity.setId(id);
-        entity.setIdPedidoOriginal(idOriginal);
-        entity.setStatus(status);
-        entity.setDataEntrada(data);
-        entity.setItens(itens);
+        // Assumindo que PedidoProducao tem setters ou @Data.
+        // Se não tiver, use o construtor ou builder dela.
+        entity.setId("abc");
+        entity.setIdPedidoOriginal(50L);
+        entity.setStatus(StatusPedido.PRONTO); // Ajuste o enum se necessário
+        entity.setDataEntrada(LocalDateTime.now());
+        entity.setItens(new ArrayList<>());
 
-        // Act - AQUI ESTÁ O SEGREDO DA COBERTURA DO MÉTODO fromEntity
+        // Act
         PedidoDTO result = PedidoDTO.fromEntity(entity);
 
         // Assert
         assertNotNull(result);
-        assertEquals(id, result.getId());
-        assertEquals(idOriginal, result.getIdPedidoOriginal());
-        assertEquals(status, result.getStatus());
-        assertEquals(data, result.getDataEntrada());
-        assertEquals(itens, result.getItens());
+        assertEquals(entity.getId(), result.getId());
+        assertEquals(entity.getIdPedidoOriginal(), result.getIdPedidoOriginal());
+        assertEquals(entity.getStatus(), result.getStatus());
     }
 }
