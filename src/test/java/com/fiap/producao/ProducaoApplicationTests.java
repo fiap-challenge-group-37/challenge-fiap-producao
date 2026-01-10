@@ -1,5 +1,6 @@
 package com.fiap.producao;
 
+import com.fiap.producao.integration.PedidoIntegrationService; // <--- Import Novo
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,12 @@ class ProducaoApplicationTests {
     @Autowired
     private ApplicationContext context;
 
-    // Substitui o cliente real por um Mock durante este teste
     @MockBean
     private DynamoDbEnhancedClient dynamoDbEnhancedClient;
+
+    // ADICIONADO: Mock necessário para o contexto subir, pois o Controller depende dele
+    @MockBean
+    private PedidoIntegrationService pedidoIntegrationService;
 
     @Test
     void contextLoads() {
