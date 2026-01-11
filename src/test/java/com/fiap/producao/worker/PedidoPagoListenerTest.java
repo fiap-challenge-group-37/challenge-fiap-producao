@@ -13,7 +13,12 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(
+        properties = {
+                // evita quebrar o contexto por placeholder faltando
+                "integration.pedidos.url=http://localhost:9999"
+        }
+)
 class PedidoPagoListenerTest {
 
     @Autowired
@@ -29,11 +34,9 @@ class PedidoPagoListenerTest {
 
     @Test
     void deve_salvar_pedido_com_status_recebido_e_idPedidoOriginal() {
-        // IMPORTANTE: ItemEvento é o tipo correto do evento
         var item = new PedidoPagoEvento.ItemEvento("Hambúrguer", 10);
         var evento = new PedidoPagoEvento(13L, List.of(item));
 
-        // método REAL do listener
         listener.receber(evento);
 
         var pedidos = repository.findAll();
@@ -41,7 +44,6 @@ class PedidoPagoListenerTest {
 
         PedidoProducao salvo = pedidos.get(0);
 
-        // seu listener seta id como String do idPedido
         assertThat(salvo.getId()).isEqualTo("13");
         assertThat(salvo.getIdPedidoOriginal()).isEqualTo(13L);
         assertThat(salvo.getStatus()).isEqualTo(StatusPedido.RECEBIDO);
