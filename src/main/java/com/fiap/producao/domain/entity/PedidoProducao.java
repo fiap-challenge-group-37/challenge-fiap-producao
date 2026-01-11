@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
@@ -20,12 +21,20 @@ public class PedidoProducao {
     private String id;
     private Long idPedidoOriginal;
     private List<ItemProducao> itens;
+
     private StatusPedido status;
+
     private LocalDateTime dataEntrada;
     private LocalDateTime dataAtualizacao;
 
     @DynamoDbPartitionKey
     public String getId() {
         return id;
+    }
+
+    // ...Mas no Banco de Dados será salvo como 'pedido_status'
+    @DynamoDbAttribute("pedido_status")
+    public StatusPedido getStatus() {
+        return status;
     }
 }
