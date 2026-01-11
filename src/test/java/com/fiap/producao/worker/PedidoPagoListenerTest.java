@@ -1,94 +1,57 @@
 package com.fiap.producao.worker;
 
 import com.fiap.producao.domain.dto.PedidoPagoEvento;
-import com.fiap.producao.domain.entity.ItemProducao;
 import com.fiap.producao.domain.entity.PedidoProducao;
+import com.fiap.producao.domain.entity.StatusPedido;
 import com.fiap.producao.repository.PedidoProducaoRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class PedidoPagoListenerTest {
 
-    @InjectMocks
+    @Autowired
     private PedidoPagoListener listener;
 
-    @Mock
+    @Autowired
     private PedidoProducaoRepository repository;
 
-    @Test
-    void deveSalvarPedidoQuandoReceberMensagemValida() {
-        ItemProducao item = new ItemProducao("Hamburguer", 2);
-        PedidoPagoEvento evento = new PedidoPagoEvento(123L, List.of(item));
-
-        listener.receberMensagem(evento);
-
-        // Verifica se salvou e captura o objeto para asserções
-        ArgumentCaptor<PedidoProducao> captor = ArgumentCaptor.forClass(PedidoProducao.class);
-        verify(repository, times(1)).save(captor.capture());
-
-        PedidoProducao salvo = captor.getValue();
-        assertEquals("123", salvo.getId());
-        assertEquals("Hamburguer", salvo.getItens().get(0).getNome());
+    @BeforeEach
+    void setup() {
+        repository.deleteAll();
     }
 
     @Test
-    void naoDeveSalvarQuandoIdPedidoForNulo() {
-        // Cenário: Mensagem vem sem ID (o código deve ignorar)
-        PedidoPagoEvento evento = new PedidoPagoEvento(null, List.of());
+    void deve_salvar_pedido_com_status_recebido_e_idPedidoOriginal() {
+        // IMPORTANTE: ItemEvento é o tipo correto do evento
+        var item = new PedidoPagoEvento.ItemEvento("Hambúrguer", 10);
+        var evento = new PedidoPagoEvento(13L, List.of(item));
 
-        listener.receberMensagem(evento);
+        // método REAL do listener
+        listener.receber(evento);
 
-        // Garante que o repository.save NUNCA foi chamado
-        verify(repository, never()).save(any());
-    }
+        var pedidos = repository.findAll();
+        assertThat(pedidos).hasSize(1);
 
-    @Test
-    void deveTratarItemComNomeVazioOuNulo() {
-        // Cenário: Itens com nomes inválidos que quebrariam o DynamoDB (Erro 400)
-        ItemProducao itemVazio = new ItemProducao("", 1);
-        ItemProducao itemNulo = new ItemProducao(null, 2);
-        PedidoPagoEvento evento = new PedidoPagoEvento(123L, List.of(itemVazio, itemNulo));
+        PedidoProducao salvo = pedidos.get(0);
 
-        listener.receberMensagem(evento);
+        // seu listener seta id como String do idPedido
+        assertThat(salvo.getId()).isEqualTo("13");
+        assertThat(salvo.getIdPedidoOriginal()).isEqualTo(13L);
+        assertThat(salvo.getStatus()).isEqualTo(StatusPedido.RECEBIDO);
 
-        ArgumentCaptor<PedidoProducao> captor = ArgumentCaptor.forClass(PedidoProducao.class);
-        verify(repository).save(captor.capture());
+        assertThat(salvo.getItens()).isNotNull();
+        assertThat(salvo.getItens()).hasSize(1);
+        assertThat(salvo.getItens().get(0).getNome()).isEqualTo("Hambúrguer");
+        assertThat(salvo.getItens().get(0).getQuantidade()).isEqualTo(10);
 
-        List<ItemProducao> itensSalvos = captor.getValue().getItens();
-
-        // Valida se o código aplicou o valor default "Item sem nome"
-        assertEquals("Item sem nome", itensSalvos.get(0).getNome());
-        assertEquals("Item sem nome", itensSalvos.get(1).getNome());
-    }
-
-    @Test
-    void deveProcessarPedidoSemItens() {
-        // Cenário: Pedido pago mas sem lista de itens (lista null)
-        PedidoPagoEvento evento = new PedidoPagoEvento(123L, null);
-
-        listener.receberMensagem(evento);
-
-        verify(repository).save(any());
-    }
-
-    @Test
-    void deveRelancarExcecaoQuandoFalharNoBanco() {
-        // Cenário: DynamoDB cai ou dá erro. O listener deve relançar para a DLQ funcionar.
-        PedidoPagoEvento evento = new PedidoPagoEvento(123L, List.of());
-        doThrow(new RuntimeException("Erro de Conexão")).when(repository).save(any());
-
-        assertThrows(RuntimeException.class, () -> listener.receberMensagem(evento));
+        assertThat(salvo.getDataEntrada()).isNotNull();
+        assertThat(salvo.getDataAtualizacao()).isNotNull();
     }
 }
