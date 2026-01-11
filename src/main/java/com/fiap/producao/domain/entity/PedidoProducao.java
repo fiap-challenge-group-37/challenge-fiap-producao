@@ -32,9 +32,14 @@ public class PedidoProducao {
         return id;
     }
 
-    // ...Mas no Banco de Dados será salvo como 'pedido_status'
+    // No DynamoDB será salvo como 'pedido_status'
     @DynamoDbAttribute("pedido_status")
     public StatusPedido getStatus() {
         return status;
+    }
+
+    @DynamoDbAttribute("pedido_status")
+    public void setStatus(StatusPedido status) {
+        this.status = status;
     }
 }
