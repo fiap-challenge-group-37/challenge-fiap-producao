@@ -25,6 +25,12 @@
         <cucumber.version>7.14.0</cucumber.version>
         <springdoc.version>2.5.0</springdoc.version>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <properties>
+            <sonar.coverage.exclusions>
+                **/domain/dto/**,
+                **/*DTO.java
+            </sonar.coverage.exclusions>
+        </properties>
     </properties>
 
     <dependencyManagement>
