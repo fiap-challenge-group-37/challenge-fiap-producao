@@ -1,7 +1,6 @@
 package com.fiap.producao.bdd;
 
 import com.fiap.producao.domain.dto.PedidoPagoEvento;
-import com.fiap.producao.domain.entity.ItemProducao;
 import com.fiap.producao.domain.entity.PedidoProducao;
 import com.fiap.producao.domain.entity.StatusPedido;
 import com.fiap.producao.repository.PedidoProducaoRepository;
@@ -39,23 +38,23 @@ public class StepDefinition {
 
     @Dado("que um pedido com ID {long} e itens {string} foi pago")
     public void que_um_pedido_foi_pago(Long idPedido, String nomeItem) {
-        ItemProducao item = new ItemProducao(nomeItem, 1);
-        PedidoPagoEvento evento = new PedidoPagoEvento(idPedido, List.of(item));
+        // ✅ Monte o evento com o DTO correto do evento (não use ItemProducao aqui)
+        var itemEvento = new PedidoPagoEvento.ItemEvento(nomeItem, 1);
+        var evento = new PedidoPagoEvento(idPedido, List.of(itemEvento));
 
-        // Convertendo Long para String pq o ID da entidade é String
-        pedidoPagoListener.receberMensagem(evento);
+        // ✅ chame o método real do listener
+        pedidoPagoListener.receber(evento);
     }
 
     @Quando("o worker processar a mensagem de pagamento")
     public void o_worker_processar_a_mensagem() {
-        // Processamento já feito no passo anterior (síncrono)
+        // Síncrono: já processou no passo anterior
     }
 
     @Entao("o pedido deve estar na fila com status {string}")
     public void o_pedido_deve_estar_na_fila_com_status(String statusEsperado) {
         var pedidos = repository.findAll();
         Assertions.assertFalse(pedidos.isEmpty());
-        // Ajuste conforme a lógica do seu listener (se ele usa o ID original ou gera um novo)
         Assertions.assertEquals(StatusPedido.valueOf(statusEsperado), pedidos.get(0).getStatus());
     }
 
@@ -66,6 +65,7 @@ public class StepDefinition {
                 .status(StatusPedido.valueOf(status))
                 .dataEntrada(LocalDateTime.now())
                 .build();
+
         repository.save(pedido);
     }
 
