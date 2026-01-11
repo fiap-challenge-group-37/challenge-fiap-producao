@@ -23,24 +23,41 @@ public class PedidoPagoListener {
 
     @SqsListener("${events.queue.pedido-pago}")
     public void receberMensagem(PedidoPagoEvento evento) {
-        // Correcao: record usa o nome do campo direto (idPedido())
         log.info("Recebi um pedido pago! ID: {}", evento.idPedido());
 
+        // Validação de segurança para o ID
+        if (evento.idPedido() == null) {
+            log.error("Pedido recebido sem ID! Ignorando mensagem.");
+            return;
+        }
+
         PedidoProducao pedido = new PedidoProducao();
-        pedido.setId(String.valueOf(evento.idPedido())); 
+        pedido.setId(String.valueOf(evento.idPedido()));
+        pedido.setIdPedidoOriginal(evento.idPedido()); // Importante salvar o ID original num campo numérico se precisar depois
         pedido.setStatus(StatusPedido.RECEBIDO);
         pedido.setDataEntrada(LocalDateTime.now());
 
-        // Correcao: record usa itens() sem o get
         if (evento.itens() != null) {
             List<ItemProducao> itens = evento.itens().stream()
-                    // ItemProducao parece ser uma classe normal (Entity), entao mantemos o getNome()
-                    .map(item -> new ItemProducao(item.getNome(), item.getQuantidade()))
+                    .map(item -> {
+                        // O DynamoDB REJEITA Strings vazias ("") com erro 400.
+                        // Garantimos que sempre haja um texto válido.
+                        String nomeItem = (item.getNome() == null || item.getNome().trim().isEmpty())
+                                ? "Item sem nome"
+                                : item.getNome();
+
+                        return new ItemProducao(nomeItem, item.getQuantidade());
+                    })
                     .collect(Collectors.toList());
             pedido.setItens(itens);
         }
 
-        repository.save(pedido);
-        log.info("Pedido salvo na producao com sucesso: {}", pedido.getId());
+        try {
+            repository.save(pedido);
+            log.info("Pedido salvo na producao com sucesso: {}", pedido.getId());
+        } catch (Exception e) {
+            log.error("Erro ao salvar no DynamoDB: {}", e.getMessage(), e);
+            throw e; // Relança para a mensagem voltar para a DLQ se necessário
+        }
     }
 }
