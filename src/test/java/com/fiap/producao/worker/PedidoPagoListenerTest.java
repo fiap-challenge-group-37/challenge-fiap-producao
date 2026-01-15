@@ -1,13 +1,10 @@
 package com.fiap.producao.worker;
 
-import com.fiap.producao.domain.dto.PedidoPagoEvento;
 import com.fiap.producao.domain.entity.PedidoProducao;
 import com.fiap.producao.domain.entity.StatusPedido;
 import com.fiap.producao.repository.PedidoProducaoRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -20,11 +17,21 @@ class PedidoPagoListenerTest {
         PedidoProducaoRepository repository = mock(PedidoProducaoRepository.class);
         PedidoPagoListener listener = new PedidoPagoListener(repository);
 
-        var item = new PedidoPagoEvento.ItemEvento("Hambúrguer", 10);
-        var evento = new PedidoPagoEvento(13L, List.of(item));
+        // CORREÇÃO: Simulamos o JSON que vem da fila
+        String json = """
+            {
+              "idPedido": 13,
+              "itens": [
+                {
+                  "nome": "Hambúrguer",
+                  "quantidade": 10
+                }
+              ]
+            }
+            """;
 
         // act
-        listener.receber(evento);
+        listener.receber(json);
 
         // assert
         ArgumentCaptor<PedidoProducao> captor = ArgumentCaptor.forClass(PedidoProducao.class);
