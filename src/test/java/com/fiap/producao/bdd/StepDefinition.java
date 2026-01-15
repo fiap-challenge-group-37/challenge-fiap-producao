@@ -1,5 +1,7 @@
 package com.fiap.producao.bdd;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiap.producao.domain.dto.PedidoPagoEvento;
 import com.fiap.producao.domain.entity.PedidoProducao;
 import com.fiap.producao.domain.entity.StatusPedido;
@@ -29,6 +31,9 @@ public class StepDefinition {
     @Autowired
     private PedidoProducaoRepository repository;
 
+    @Autowired // Injeta o ObjectMapper para converter objeto -> json
+    private ObjectMapper objectMapper;
+
     private PedidoProducao pedidoResultado;
 
     @Before
@@ -37,18 +42,20 @@ public class StepDefinition {
     }
 
     @Dado("que um pedido com ID {long} e itens {string} foi pago")
-    public void que_um_pedido_foi_pago(Long idPedido, String nomeItem) {
-        // ✅ Monte o evento com o DTO correto do evento (não use ItemProducao aqui)
+    public void que_um_pedido_foi_pago(Long idPedido, String nomeItem) throws JsonProcessingException {
+        // Monta o evento
         var itemEvento = new PedidoPagoEvento.ItemEvento(nomeItem, 1);
         var evento = new PedidoPagoEvento(idPedido, List.of(itemEvento));
 
-        // ✅ chame o método real do listener
-        pedidoPagoListener.receber(evento);
+        // CORREÇÃO: Converte para JSON String antes de passar para o listener
+        String json = objectMapper.writeValueAsString(evento);
+
+        pedidoPagoListener.receber(json);
     }
 
     @Quando("o worker processar a mensagem de pagamento")
     public void o_worker_processar_a_mensagem() {
-        // Síncrono: já processou no passo anterior
+        // Síncrono
     }
 
     @Entao("o pedido deve estar na fila com status {string}")
@@ -65,7 +72,6 @@ public class StepDefinition {
                 .status(StatusPedido.valueOf(status))
                 .dataEntrada(LocalDateTime.now())
                 .build();
-
         repository.save(pedido);
     }
 
